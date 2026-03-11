@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Student Skills Marketplace</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f6f8;
+margin:0;
+}
+
+header{
+background:#2c3e50;
+color:white;
+padding:15px;
+text-align:center;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:15px;
+margin-top:15px;
+border-radius:10px;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+button{
+background:#3498db;
+color:white;
+border:none;
+padding:8px 12px;
+border-radius:6px;
+cursor:pointer;
+}
+
+input,textarea{
+width:100%;
+padding:8px;
+margin-top:5px;
+margin-bottom:10px;
+}
+
+.review{
+background:#eee;
+padding:5px;
+margin-top:5px;
+border-radius:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>Student Skills Marketplace</h1>
+<p>Learn Skills From Other Students</p>
+
+</header>
+
+
+<div class="container">
+
+<div class="card">
+
+<h2>Signup / Login</h2>
+
+<input id="email" placeholder="Email">
+
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="signup()">Signup</button>
+
+<button onclick="login()">Login</button>
+
+<p id="status"></p>
+
+</div>
+
+
+<div class="card">
+
+<h2>Post Skill</h2>
+
+<input id="title" placeholder="Skill Title">
+
+<textarea id="desc" placeholder="Describe your lesson"></textarea>
+
+<input id="price" placeholder="Price">
+
+<button onclick="postSkill()">Post Skill</button>
+
+</div>
+
+
+<div class="card">
+
+<h2>Search Skills</h2>
+
+<input id="search" placeholder="Search skills" oninput="loadServices()">
+
+</div>
+
+
+<h2>Marketplace</h2>
+
+<div id="services"></div>
+
+</div>
+
+
+<script>
+
+const SUPABASE_URL = "https://dqsaryvizggjwyzpasta.supabase.co"
+const SUPABASE_KEY = "sb_publishable_jT2T6fSzg8Eb2F4Iw7LMLw_dryGGl8W"
+
+const supabase = supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+
+let currentUser = null
+
+
+async function signup(){
+
+let email = document.getElementById("email").value
+let password = document.getElementById("password").value
+
+let {data,error} = await supabase.auth.signUp({
+email:email,
+password:password
+})
+
+if(error) alert(error.message)
+
+}
+
+
+async function login(){
+
+let email = document.getElementById("email").value
+let password = document.getElementById("password").value
+
+let {data,error} = await supabase.auth.signInWithPassword({
+email:email,
+password:password
+})
+
+if(error) alert(error.message)
+
+}
+
+
+supabase.auth.getUser().then(res=>{
+
+currentUser = res.data.user
+
+if(currentUser){
+document.getElementById("status").innerText =
+"Logged in as " + currentUser.email
+}
+
+})
+
+
+async function postSkill(){
+
+if(!currentUser){
+alert("Login first")
+return
+}
+
+let title = document.getElementById("title").value
+let description = document.getElementById("desc").value
+let price = document.getElementById("price").value
+
+await supabase.from("services").insert({
+
+title,
+description,
+price,
+author:currentUser.email
+
+})
+
+loadServices()
+
+}
+
+
+async function loadServices(){
+
+let search = document.getElementById("search").value
+
+let {data} = await supabase.from("services").select("*")
+
+let container = document.getElementById("services")
+
+container.innerHTML=""
+
+data.forEach(s=>{
+
+if(search && !s.title.toLowerCase().includes(search.toLowerCase())) return
+
+container.innerHTML+=`
+
+<div class="card">
+
+<h3>${s.title}</h3>
+
+<p>${s.description}</p>
+
+<p><b>Tutor:</b> ${s.author}</p>
+
+<p><b>Price:</b> ${s.price}</p>
+
+<button onclick="review(${s.id})">Leave Review</button>
+
+<div id="reviews-${s.id}"></div>
+
+</div>
+
+`
+
+loadReviews(s.id)
+
+})
+
+}
+
+
+async function review(serviceId){
+
+let comment = prompt("Write review")
+
+if(!comment) return
+
+await supabase.from("reviews").insert({
+
+service_id:serviceId,
+author:currentUser.email,
+comment:comment
+
+})
+
+loadServices()
+
+}
+
+
+async function loadReviews(serviceId){
+
+let {data} = await supabase.from("reviews")
+.select("*")
+.eq("service_id",serviceId)
+
+let container = document.getElementById("reviews-"+serviceId)
+
+container.innerHTML=""
+
+data.forEach(r=>{
+
+container.innerHTML+=
+`<div class="review">${r.author}: ${r.comment}</div>`
+
+})
+
+}
+
+
+loadServices()
+
+</script>
+
+</body>
+
+</html>
