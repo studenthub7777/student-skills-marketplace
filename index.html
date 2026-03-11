@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Student Skills Marketplace</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f5f5f5;
+margin:0;
+}
+
+header{
+background:#2c3e50;
+color:white;
+padding:15px;
+text-align:center;
+}
+
+.container{
+width:90%;
+max-width:900px;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:15px;
+margin-top:15px;
+border-radius:10px;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+button{
+background:#3498db;
+color:white;
+border:none;
+padding:8px 12px;
+border-radius:6px;
+cursor:pointer;
+}
+
+input,textarea{
+width:100%;
+padding:8px;
+margin-top:5px;
+margin-bottom:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Student Skills Marketplace</h1>
+<p>Learn Skills From Other Students</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h2>Post Your Skill</h2>
+
+<input id="name" placeholder="Your Name">
+
+<input id="title" placeholder="Skill Title (Example: Learn Pusoy Strategy)">
+
+<textarea id="desc" placeholder="Describe your tutorial"></textarea>
+
+<input id="price" placeholder="Price">
+
+<button onclick="addService()">Post Service</button>
+
+</div>
+
+<h2>Marketplace</h2>
+
+<div id="services"></div>
+
+</div>
+
+<script>
+
+let services = JSON.parse(localStorage.getItem("services")) || []
+
+function save(){
+localStorage.setItem("services",JSON.stringify(services))
+}
+
+function render(){
+
+let container = document.getElementById("services")
+container.innerHTML=""
+
+services.forEach((s,i)=>{
+
+container.innerHTML+=`
+<div class="card">
+<h3>${s.title}</h3>
+<p>${s.desc}</p>
+<p><b>Tutor:</b> ${s.name}</p>
+<p><b>Price:</b> ${s.price}</p>
+<button onclick="book(${i})">Book Session</button>
+</div>
+`
+
+})
+
+}
+
+function addService(){
+
+let name=document.getElementById("name").value
+let title=document.getElementById("title").value
+let desc=document.getElementById("desc").value
+let price=document.getElementById("price").value
+
+if(!name || !title){
+alert("Please fill required fields")
+return
+}
+
+services.push({name,title,desc,price})
+
+save()
+render()
+
+document.getElementById("name").value=""
+document.getElementById("title").value=""
+document.getElementById("desc").value=""
+document.getElementById("price").value=""
+
+}
+
+function book(i){
+
+alert("You booked a session with "+services[i].name)
+
+}
+
+render()
+
+</script>
+
+</body>
+</html>
